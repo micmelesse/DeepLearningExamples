@@ -1,26 +1,30 @@
 #!/bin/bash
 
-MODEL_DIR="pretrained_models"
-EXP_DIR="output"
+: ${WAVEGLOW:="pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt"}
+: ${FASTPITCH:="output/FastPitch_checkpoint_1500.pt"}
+: ${REPEATS:=1000}
+: ${BS_SEQUENCE:="1 4 8"}
+: ${PHRASES:="phrases/benchmark_8_128.tsv"}
+: ${OUTPUT_DIR:="./output/audio_$(basename ${PHRASES} .tsv)"}
+: ${AMP:=false}
 
-WAVEG_CH="waveglow_256channels_ljs_v3.pt"
+[ "$AMP" = true ] && AMP_FLAG="--amp"
 
-BSZ=${1:-4}
-PRECISION=${2:-fp16}
+mkdir -p "$OUTPUT_DIR"
 
-for PRECISION in fp16 fp32; do
-  for BSZ in 1 4 8 ; do
+for BS in $BS_SEQUENCE ; do
 
-    echo -e "\nprecision=${PRECISION} batch size=${BSZ}\n"
+  echo -e "\nAMP: ${AMP}, batch size: ${BS}\n"
 
-    [ "$PRECISION" == "fp16" ] && AMP_FLAG="--amp-run" || AMP_FLAG=""
-
-    python inference.py --cuda --wn-channels 256 ${AMP_FLAG} \
-                        --fastpitch ${EXP_DIR}/checkpoint_FastPitch_1500.pt \
-                        --waveglow ${MODEL_DIR}/waveglow/${WAVEG_CH} \
-                        --include-warmup \
-                        --batch-size ${BSZ} \
-                        --repeats 1000 \
-                        -i phrases/benchmark_8_128.tsv
-  done
+  python inference.py --cuda --cudnn-benchmark \
+                      -i ${PHRASES} \
+                      -o ${OUTPUT_DIR} \
+                      --fastpitch ${FASTPITCH} \
+                      --waveglow ${WAVEGLOW} \
+                      --wn-channels 256 \
+                      --include-warmup \
+                      --batch-size ${BS} \
+                      --repeats ${REPEATS} \
+                      --torchscript \
+                      ${AMP_FLAG}
 done

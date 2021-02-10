@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
 
-DATA_DIR="LJSpeech-1.1"
-EXP_DIR="output"
-WAVEG_CH="pretrained_models/waveglow/waveglow_256channels_ljs_v3.pt"
+: ${WAVEGLOW:="pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt"}
+: ${FASTPITCH:="output/FastPitch_checkpoint_1500.pt"}
+: ${BS:=32}
+: ${PHRASES:="phrases/devset10.tsv"}
+: ${OUTPUT_DIR:="./output/audio_$(basename ${PHRASES} .tsv)"}
+: ${AMP:=false}
 
-CHECKPOINT=${1:-1500}
+[ "$AMP" = true ] && AMP_FLAG="--amp"
 
-python inference.py -i phrases/devset10.tsv \
-                    -o ${EXP_DIR}/audio_devset10_checkpoint${CHECKPOINT} \
-                    --log-file ${EXP_DIR}/nvlog_inference.json \
-                    --dataset-path ${DATA_DIR} \
-                    --fastpitch ${EXP_DIR}/checkpoint_FastPitch_${CHECKPOINT}.pt \
-                    --waveglow ${WAVEG_CH} \
+mkdir -p "$OUTPUT_DIR"
+
+python inference.py --cuda \
+                    -i ${PHRASES} \
+                    -o ${OUTPUT_DIR} \
+                    --fastpitch ${FASTPITCH} \
+                    --waveglow ${WAVEGLOW} \
 		    --wn-channels 256 \
-                    --batch-size 32 \
-                    --amp-run \
-                    --cuda
+                    --batch-size ${BS} \
+                    ${AMP_FLAG}
