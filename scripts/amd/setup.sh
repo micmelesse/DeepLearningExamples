@@ -1,1 +1,1 @@
-pip3 install wget nltk
+pip3 install -r requirements.txt
