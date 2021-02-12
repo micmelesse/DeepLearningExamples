@@ -1,0 +1,5 @@
+SRC=/home/mmelesse/dockerx/DeepLearningExamples/PyTorch/LanguageModeling/BERT/data/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5
+# SRC=/home/mmelesse/dockerx/DeepLearningExamples/PyTorch/LanguageModeling/BERT/data/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5
+DEST=datum@10.227.37.227:/home/datum/BERT_hdf5
+
+scp $SRC $DEST
